@@ -1,3 +1,5 @@
+package visitor;
+
 import visitor.*;
 import syntaxtree.*;
 
