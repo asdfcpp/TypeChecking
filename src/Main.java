@@ -32,9 +32,9 @@ public class Main {
  		    TypeCheckVis p = new TypeCheckVis(newT);
 		    minijavaroot.accept(p);
 		    if(p.error == true) System.out.println("error");
-		    catch(Exception e){
-		    	e.printStackTrace();
 		    }
-    	}
+    	catch(Exception e){
+	    	e.printStackTrace();
+	    }
     }
 }

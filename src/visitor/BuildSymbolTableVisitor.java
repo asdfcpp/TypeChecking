@@ -9,7 +9,7 @@ public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>
 {
 	boolean isField = false;	//是否在类作用域
 	String currClass;			//当前所在的类名
-	boolean flag = false;		//扫描中是否发现错误
+	public boolean flag = false;		//扫描中是否发现错误
 	/**
 	 * f0 -> MainClass()
 	 * f1 -> ( TypeDeclaration() )*
