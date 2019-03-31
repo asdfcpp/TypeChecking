@@ -1,9 +1,11 @@
+package visitor;
+
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Stack;
 
-//import symboltable.*;
+import symboltable.*;
 import syntaxtree.*;
 import visitor.*;
 
@@ -420,7 +422,6 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 			error = true;
 			return null;
 		}
-		symbolTable.classTable.get(f_name).son = s_name;
 		symbolTable.classTable.get(s_name).father = f_name;
 		boolean round = true;
 		String f_name_copy = n.f3.f0.toString();
