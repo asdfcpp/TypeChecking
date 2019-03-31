@@ -64,8 +64,8 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 	
 	SymTable symbolTable;
 	Stack<Environment> Variable_env;
-	final static int IDENTIFIER = 0, BOOLEAN = 1, INTEGER = 2, ARRAY = 3;
-	final static String TYPE[] = {"IDENTIFIER", "BOOLEAN", "INTEGER", "ARRAY"};
+	final static int ARRAY = 0, BOOLEAN = 1, INTEGER = 2, IDENTIFIER = 3;
+	final static String TYPE[] = {"ArrayType", "BooleanType", "IntegerType"};
 	public boolean error = false;
 	
 	public TypeCheckVis(SymTable m) {
@@ -75,8 +75,8 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 	
 	public String get_name(Type x) {
 		if(x == null) return null;
-		if(x.f0.which > 0 && x.f0.which <= 3) return TYPE[x.f0.which];
-		if(x.f0.which == 0) return ((Identifier)x.f0.choice).f0.toString();
+		if(x.f0.which >= 0 && x.f0.which < 3) return TYPE[x.f0.which];
+		if(x.f0.which == 3) return ((Identifier)x.f0.choice).f0.toString();
 		return "???";
 	}
 	
@@ -95,14 +95,14 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 			int x0 = x.f0.which;
 			int y0 = y.f0.which;
 			if(x0 != y0) return false;
-			if(x0 != 0) return true;
+			if(x0 != 3) return true;
 			return get_name(x).equals(get_name(y));
 		}
 		// 3 parameters
 		int x0 = x.f0.which;
 		int y0 = y.f0.which;
 		if(x0 != y0) return false;
-		if(x0 == p && p != 0) return true; // except identifier
+		if(x0 == p && p != 3) return true; // except identifier
 		// x and y are both identifier
 		return get_name(x).equals(get_name(y));
 	}
@@ -123,8 +123,7 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 		return false;
 	}
 	
-	boolean declared(Type x)
-	{
+	boolean declared(Type x) {
 		if(x == null || x.f0.which < 3) return true;
 		else {
 			Identifier n = ((Identifier)(x.f0.choice));
@@ -622,8 +621,7 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 	 * f4 -> ( ExpressionList() )?
 	 * f5 -> ")"
 	 */
-	public Type visit(MessageSend n) // tbc
-	{
+	public Type visit(MessageSend n) {
 		Type F0 = n.f0.accept(this);
 		if(F0 == null) return null;
 		else if(F0.f0.which != IDENTIFIER) {

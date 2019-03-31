@@ -10,7 +10,7 @@ import visitor.TypeCheckVis;
 
 public class Main { 
 	public static String getInputMessage() throws IOException {
-        System.out.println("ÇëÊäÈëÄúµÄÃüÁî¡Ã");
+        System.out.println("ÇëÊäÈëÄúµÄC:\\Users\\Heyifei\\Desktop\\Factorial-error.javaÃüÁî¡Ã");
         byte buffer[] = new byte[1024];
         int count = System.in.read(buffer);
         char[] ch = new char[count-2];
