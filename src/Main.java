@@ -5,12 +5,13 @@ import java.io.InputStream;
 
 import symboltable.SymTable;
 import syntaxtree.Node;
+import toPiglet.pigletVisitor;
 import visitor.BuildSymbolTableVisitor;
 import visitor.TypeCheckVis;
 
 public class Main { 
 	public static String getInputMessage() throws IOException {
-        System.out.println("请输入您的C:\\Users\\Heyifei\\Desktop\\Factorial-error.java命令∶");
+        System.out.println("Java文件地址：");
         byte buffer[] = new byte[1024];
         int count = System.in.read(buffer);
         char[] ch = new char[count-2];
@@ -28,11 +29,15 @@ public class Main {
     		SymTable newT = new SymTable();
     		BuildSymbolTableVisitor newST = new BuildSymbolTableVisitor();
  		    minijavaroot.accept(newST, newT);
- 		    if(newST.flag == true) System.out.println("error");
+ 		    if(newST.flag) System.out.println("This java file has error(s)");
  		    TypeCheckVis p = new TypeCheckVis(newT);
 		    minijavaroot.accept(p);
-		    if(p.error == true) System.out.println("error");
-		    }
+		    if(p.error) System.out.println("This java file has error(s)");
+		    
+		    pigletVisitor pg = new pigletVisitor(newT,newST.temp,"");
+    	    minijavaroot.accept(pg,newT);
+    	    System.out.println(toPiglet.Put.pigletCode());
+		}
     	catch(Exception e){
 	    	e.printStackTrace();
 	    }

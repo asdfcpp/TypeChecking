@@ -7,9 +7,10 @@ import syntaxtree.*;
 
 public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>
 {
-	boolean isField = false;	//是否在类作用域
+	boolean ClassField = false;	//是否在类作用域
 	String currClass;			//当前所在的类名
 	public boolean flag = false;		//扫描中是否发现错误
+	public int temp = 20;	//寄存器编号
 	/**
 	 * f0 -> MainClass()
 	 * f1 -> ( TypeDeclaration() )*
@@ -56,7 +57,7 @@ public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>
 			//	创建主类信息表
 			MethodSymTable MethodTb = new MethodSymTable(Func);
 			//	创建主函数信息表
-			ClassTb.methods.put(Func, new MethodInfo(MethodTb,"void"));
+			ClassTb.methods.put(Func, new MethodInfo(MethodTb,"void",ClassTb.methods.size()*4));
 			//	主类方法表，加入（方法名，方法信息+返回类型）
 			ClassTb.isSonClass = false;
 			//设置方法相关信息
@@ -66,8 +67,8 @@ public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>
 			MethodTb.retVal = null;
 			MethodTb.inClass = currClass;
 			MethodTb.params.addLast(new Type(n0));
-			MethodTb.locals.put(Arg, new TypeInfo(new Type(n0),"String []", Arg));
-			//局部变量表加入（参数名，参数信息类型）
+			MethodTb.locals.put(Arg, new TypeInfo(new Type(n0),"String []", Arg,0,-1));
+			//局部变量表加入（参数名，参数信息类型），String [] 参数用不到
 			s.classTable.put(currClass, ClassTb);
 			//将该类的信息加入到classTable中
 		}
@@ -95,10 +96,10 @@ public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>
 			currClass = n.f1.f0.toString();
 			ClassSymTable ClassTb = new ClassSymTable(currClass);
 			ClassTb.isSonClass = false;
-			//添加类中域的信息（因为类中域和函数中局部变量的处理方法不同，所以用了isField指示）
-			isField=true;
+			//添加类中域的信息（因为类中域和函数中局部变量的处理方法不同，所以用了ClassField指示）
+			ClassField=true;
 			n.f3.accept(this,(Object) ClassTb.field);
-			isField=false;
+			ClassField=false;
 			//添加类中函数的信息
 			n.f4.accept(this,(Object) ClassTb.methods);
 			//将类信息加入符号表
@@ -131,10 +132,10 @@ public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>
 			//设置父类信息
 			ClassTb.father = n.f3.f0.toString();
 			ClassTb.isSonClass = true;
-			//添加类中域的信息（因为类中域和函数中局部变量的处理方法不同，所以用了isField指示）
-			isField=true;
+			//添加类中域的信息（因为类中域和函数中局部变量的处理方法不同，所以用了ClassField指示）
+			ClassField=true;
 			n.f5.accept(this,(Object) ClassTb.field);
-			isField=false;
+			ClassField=false;
 			//添加方法信息
 			n.f6.accept(this,(Object) ClassTb.methods);
 			//将这个类的信息加入符号表
@@ -156,17 +157,17 @@ public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>
 	{
 			LinkedHashMap<String, TypeInfo> s  = (LinkedHashMap<String, TypeInfo>) o;
 			//s可能是filed或local
-			String cName = (String)n.f0.accept(this, o);
+			String TypeName = (String)n.f0.accept(this, o);
 			String id=n.f1.f0.toString();
 			
-			if (isField  && !s.containsKey(currClass + "." + id))//类中的变量，为了和函数中的临时变量区分，用所在的类名作为前缀，为了避免和其他标识符混淆，故加“.”做进一步区分
+			if (ClassField  && !s.containsKey(currClass + "." + id))//类中的变量，为了和函数中的临时变量区分，用所在的类名作为前缀，为了避免和其他标识符混淆，故加“.”做进一步区分
 			{
-				s.put(currClass + "." + id, new TypeInfo(n.f0, cName, id));
+				s.put(currClass + "." + id, new TypeInfo(n.f0, TypeName, id , s.size()*4+4, -1));
 			}
 			else//函数中的临时变量，名字正常
-			if (!isField && !s.containsKey(id))
+			if (!ClassField && !s.containsKey(id))
 			{
-				s.put(id, new TypeInfo(n.f0, cName, id));
+				s.put(id, new TypeInfo(n.f0, TypeName, id , -1, temp++));
 			}
 			else
 			{
@@ -236,7 +237,7 @@ public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>
 			MethodTb.inClass = currClass;//记录所在类名
 			n.f4.accept(this,(Object) MethodTb);	//遍历形参表
 			n.f7.accept(this,(Object) MethodTb.locals);//遍历局部变量声明
-			s.put(Func, new MethodInfo(MethodTb,retType));
+			s.put(Func, new MethodInfo(MethodTb,retType,s.size()*4));
 		}
 		else
 		{
@@ -253,11 +254,11 @@ public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>
 	public String visit(FormalParameter n, Object o)
 	{//对形参表
 		MethodSymTable s = (MethodSymTable) o;
-		String cName = (String)n.f0.accept(this,o);
+		String TypeName = (String)n.f0.accept(this,o);
 		String id = n.f1.f0.toString();
 		if(!s.locals.containsKey(n.f1.f0.toString()))	//只需在locals中判断重复定义
 		{//将形参类型记录在params链表中，形参类型和名字记录在locals表中（即作为局部变量处理）
-			s.locals.put(id, new TypeInfo(n.f0,cName,id));
+			s.locals.put(id, new TypeInfo(n.f0,TypeName,id,-1,s.params.size()+1));
 			s.params.addLast(n.f0);
 		}
 		else

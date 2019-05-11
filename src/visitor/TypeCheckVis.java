@@ -9,6 +9,11 @@ import symboltable.*;
 import syntaxtree.*;
 import visitor.*;
 
+class Environment {
+	String class_env;
+	String method_env;
+}
+
 abstract class TypeCheckingException {
 	int Line;
 	String error_message;
@@ -53,11 +58,6 @@ class ParamMismatchException extends TypeCheckingException {
 	void print_message() {
 		System.out.println("Param Number Not Match in line " + Line + "; " + error_message);
 	}
-}
-
-class Environment {
-	String class_env;
-	String method_env;
 }
 
 public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
@@ -138,7 +138,7 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 		}
 	}
 	
-	boolean searchkey(LinkedHashMap<String, TypeInfo> linkmap, Type x, Identifier n, String str) {
+	boolean find_identifier(LinkedHashMap<String, TypeInfo> linkmap, Type x, Identifier n, String str) {
 		if(linkmap.containsKey(str)) {
 			x.f0 = linkmap.get(str).typeVal.f0;
 			if(declared(x)) return true;
@@ -167,7 +167,7 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 			x = linkmap.get(str).methodST.retVal;
 			if(declared(x)) return mst;
 			else {
-				String error_m = "Return Value of method "+ str;
+				String error_m = "Return Value of method " + str;
 				NoDefException ex = new NoDefException(n.f0.beginLine, error_m);
 				ex.print_message();
 				error = true;
@@ -199,12 +199,11 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 			}
 			++count;
 		}
-		if(found == false) {
+		if(!found) {
 			String error_m = "Method "+ str;
 			NoDefException ex = new NoDefException(n.f0.beginLine, error_m);
 			ex.print_message();
 			error = true;
-			return null;
 		}
 		return null;		
 	}
@@ -514,15 +513,15 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 	 */
 	public Type visit(Identifier n) {
 		Environment env = Variable_env.peek();
-		String ss = env.class_env;
+		String str = env.class_env;
 		int count = 0;
 		LinkedHashMap<String, TypeInfo> linkmap;
 		linkmap = symbolTable.classTable.get(env.class_env).methods.get(env.method_env).methodST.locals;		
-		Type t = new Type(new NodeChoice(new NodeToken("")));
-		if(searchkey(linkmap, t, n, n.f0.toString()) == true) return t;
+		Type x = new Type(new NodeChoice(new NodeToken("")));
+		if(find_identifier(linkmap, x, n, n.f0.toString())) return x;
 		else {
 			linkmap = symbolTable.classTable.get(env.class_env).field;
-			if(searchkey(linkmap, t, n, env.class_env + "." + n.f0.toString()) == true) return t;
+			if(find_identifier(linkmap, x, n, env.class_env + "." + n.f0.toString()) == true) return x;
 			else {
 				boolean found = false;
 				ClassSymTable p;
@@ -530,17 +529,17 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 					p = symbolTable.classTable.get(env.class_env);
 					if(!symbolTable.classTable.containsKey(env.class_env)) return null;
 					linkmap = p.field;
-					if(searchkey(linkmap, t, n, env.class_env + "." + n.f0.toString()) == true) {
+					if(find_identifier(linkmap, x, n, env.class_env + "." + n.f0.toString())) {
 						found = true;
-						return t;
+						return x;
 					}
 					if(p.isSonClass) env.class_env = p.father;
 					else break;
 					++count;
 				}
-				env.class_env = ss;
+				env.class_env = str;
 				if(found == false) {
-					String error_m = "Variable " + n.f0.toString() + " not found";
+					String error_m = n.f0.toString() + " dosen't exist";
 					NoDefException ex = new NoDefException(n.f0.beginLine, error_m);
 					ex.print_message();
 					error = true;
@@ -622,9 +621,9 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 	 * f5 -> ")"
 	 */
 	public Type visit(MessageSend n) {
-		Type F0 = n.f0.accept(this);
-		if(F0 == null) return null;
-		else if(F0.f0.which != IDENTIFIER) {
+		Type x = n.f0.accept(this);
+		if(x == null) return null;
+		else if(x.f0.which != IDENTIFIER) {
 			String error_m = "Method-Calling can only be done by a CLASS";
 			TypeMismatchException ex = new TypeMismatchException(n.f1.beginLine, error_m);
 			ex.print_message();
@@ -633,39 +632,39 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 		}
 		else {
 			Environment env = new Environment();
-			env.class_env = ((Identifier)(F0.f0.choice)).f0.toString();
+			env.class_env = ((Identifier)(x.f0.choice)).f0.toString();
 			Variable_env.push(env);			
 			MethodSymTable mst = visitMethod(n.f2);			
 			Variable_env.pop();
 			if(mst == null) return null;
 			else {
-				Type x = mst.retVal;
-				LinkedList<Type> newl = mst.params;
-				if(!n.f4.present() && newl.size() == 0) return x;
-				else if(n.f4.present() && newl.size() > 0) {
-					ExpressionList e1 = (ExpressionList)n.f4.node;
-					if(((e1).f1.nodes.size() + 1) == newl.size()) {
-						Type y = (e1).f0.accept(this);
+				Type y = mst.retVal;
+				LinkedList<Type> linklist = mst.params;
+				if(!n.f4.present() && linklist.size() == 0) return y;
+				else if(n.f4.present() && linklist.size() > 0) {
+					ExpressionList e = (ExpressionList)n.f4.node;
+					if((1 + e.f1.nodes.size()) == linklist.size()) {
+						Type z = e.f0.accept(this);
 						int i = 0;
-						if(!type_match(y, -1, newl.get(i)) && !is_ancestor(newl.get(i), y)) {
-							String error_m = "Method: "+ mst.methodName;
+						if(!type_match(z, -1, linklist.get(i)) && !is_ancestor(linklist.get(i), z)) {
+							String error_m = "Method: " + mst.methodName;
 							ParamMismatchException ex = new ParamMismatchException(n.f1.beginLine, error_m);
 							ex.print_message();	
 							error = true;
 							return null;
 						}
 						++i;
-				        for (Enumeration<Node> e = ((ExpressionList)n.f4.node).f1.elements(); e.hasMoreElements(); ++i) {
-				        	Type t4 = e.nextElement().accept(this);
-				        	if(!type_match(t4, -1, newl.get(i)) && !is_ancestor(newl.get(i), t4)) {
-				        		String error_m = "Method: "+ mst.methodName;
+				        for (Enumeration<Node> enu_node = ((ExpressionList)n.f4.node).f1.elements(); enu_node.hasMoreElements(); ++i) {
+				        	Type w = enu_node.nextElement().accept(this);
+				        	if(!type_match(w, -1, linklist.get(i)) && !is_ancestor(linklist.get(i), w)) {
+				        		String error_m = "Method: " + mst.methodName;
 				        		ParamMismatchException ex = new ParamMismatchException(n.f1.beginLine, error_m);
 				        		ex.print_message();	
 				        		error = true;
 				        		return null;
 				           }				          
 				        }
-				        return x;
+				        return y;
 				    }
 					else {
 						String error_m = "Method: "+ mst.methodName;
@@ -706,16 +705,15 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 		Environment env = Variable_env.peek();
 		env.method_env = n.f2.f0.toString();
 		n.f8.accept(this);
-		Type t10 = n.f10.accept(this);
-		if(!type_match(n.f1, -1, t10) && !is_ancestor(n.f1, t10)) {
-			String error_m = "Type of Return Value Mismatched in "+ n.f2.f0.toString();
-			error_m += (": " + get_name(n.f1)+ " and " + get_name(t10));
+		Type F10 = n.f10.accept(this);
+		if(!type_match(n.f1, -1, F10) && !is_ancestor(n.f1, F10)) {
+			String error_m = "Type of Return Value Mismatched in " + n.f2.f0.toString();
+			error_m += (": " + get_name(n.f1) + " and " + get_name(F10));
 			TypeMismatchException ex = new TypeMismatchException(n.f9.beginLine, error_m);
 			ex.print_message();	
 			error = true;
 			return null;
 		}
-		
 		ClassSymTable table = symbolTable.classTable.get(env.class_env);
 		int count = 0;
 		while(count < symbolTable.classTable.size()) {
@@ -724,8 +722,8 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 				table = symbolTable.classTable.get(env.class_env);
 				LinkedHashMap<String, MethodInfo> linkmap0 = table.methods;
 				if(linkmap0.containsKey(n.f2.f0.toString())) {
-					boolean b1 = type_match(linkmap0.get(env.method_env).methodST.retVal, -1, t10);
-					boolean b2 = is_ancestor(linkmap0.get(env.method_env).methodST.retVal, t10);
+					boolean b1 = type_match(linkmap0.get(env.method_env).methodST.retVal, -1, F10);
+					boolean b2 = is_ancestor(linkmap0.get(env.method_env).methodST.retVal, F10);
 					if(!b1 && !b2) {
 						String error_m = "Type of Return Value Mismatched between class "+ n.f2.f0.toString();
 						error_m += " and its ancestor";
@@ -768,7 +766,7 @@ public class TypeCheckVis extends GJNoArguDepthFirst<Type> {
 	public Type visit(NotExpression n) {
 		Type F1 = n.f1.accept(this);
 		if(!type_match(F1, BOOLEAN, null)) {
-			String error_m = "Expr in Not Expr must be BOOLEAN type";
+			String error_m = "Expr in Not-Expr must be BOOLEAN type";
 			TypeMismatchException ex = new TypeMismatchException(n.f0.beginLine, error_m);
 			ex.print_message();
 			error = true;
