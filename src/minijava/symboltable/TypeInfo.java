@@ -1,6 +1,6 @@
-package symboltable;
+package minijava.symboltable;
 
-import syntaxtree.Type;
+import minijava.syntaxtree.Type;
 
 public class TypeInfo {
 	public Type typeVal;//该变量类型

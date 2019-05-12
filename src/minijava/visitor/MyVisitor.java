@@ -1,7 +1,7 @@
-package visitor;
+package minijava.visitor;
 
-import visitor.*;
-import syntaxtree.*;
+import minijava.visitor.*;
+import minijava.syntaxtree.*;
 
 public class MyVisitor extends DepthFirstVisitor {
 	public void visit(VarDeclaration n) {

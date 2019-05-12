@@ -1,8 +1,8 @@
-package visitor;
+package minijava.visitor;
 import java.util.LinkedHashMap;
 
-import symboltable.*;
-import syntaxtree.*;
+import minijava.symboltable.*;
+import minijava.syntaxtree.*;
 
 
 public class BuildSymbolTableVisitor  extends GJDepthFirst<Object,Object>

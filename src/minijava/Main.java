@@ -1,13 +1,14 @@
+package minijava;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import symboltable.SymTable;
-import syntaxtree.Node;
-import toPiglet.pigletVisitor;
-import visitor.BuildSymbolTableVisitor;
-import visitor.TypeCheckVis;
+import minijava.symboltable.SymTable;
+import minijava.syntaxtree.Node;
+import minijava.toPiglet.pigletVisitor;
+import minijava.visitor.BuildSymbolTableVisitor;
+import minijava.visitor.TypeCheckVis;
 
 public class Main { 
 	public static String getInputMessage() throws IOException {

@@ -1,13 +1,13 @@
-package visitor;
+package minijava.visitor;
 
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Stack;
 
-import symboltable.*;
-import syntaxtree.*;
-import visitor.*;
+import minijava.symboltable.*;
+import minijava.syntaxtree.*;
+import minijava.visitor.*;
 
 class Environment {
 	String class_env;

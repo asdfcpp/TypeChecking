@@ -1,8 +1,8 @@
-package symboltable;
+package minijava.symboltable;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import syntaxtree.*;
+import minijava.syntaxtree.*;
 
 public class MethodSymTable {
 	public Type retVal;//返回值类型

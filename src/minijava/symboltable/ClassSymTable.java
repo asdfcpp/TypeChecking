@@ -1,4 +1,4 @@
-﻿package symboltable;
+﻿package minijava.symboltable;
 
 import java.util.LinkedHashMap;
 
