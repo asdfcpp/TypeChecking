@@ -56,12 +56,13 @@ public class pigletVisitor extends GJDepthFirst<String,Object> {
 	 * f11 -> Identifier()
 	 * f12 -> ")"
 	 * f13 -> "{"
-	 * f14 -> PrintStatement()
-	 * f15 -> "}"
+	 * f14 -> ( VarDeclaration() )*
+	 * f15 -> ( Statement() )*
 	 * f16 -> "}"
+	 * f17 -> "}"
 	 */
 	public String visit(MainClass n, Object argu) {
-		n.f14.accept(this, argu);
+		n.f15.accept(this, argu);
 		return null;
 	}
 	
@@ -248,7 +249,7 @@ public class pigletVisitor extends GJDepthFirst<String,Object> {
 		Label l2 = new Label("IF");
 		Put.gen("MOVE " + t + " ");
 		n.f2.accept(this, argu);
-		Put.gen("CJUMP" + t + " " + l1 + "\n");
+		Put.gen("CJUMP " + t + " " + l1 + "\n");
 		n.f4.accept(this, argu);
 		Put.gen("JUMP " + l2 + "\n");
 		Put.gen(l1 + " NOOP\n");

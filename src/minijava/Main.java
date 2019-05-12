@@ -1,14 +1,17 @@
 package minijava;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import piglet.PigletParser;
 import minijava.symboltable.SymTable;
 import minijava.syntaxtree.Node;
 import minijava.visitor.pigletVisitor;
 import minijava.visitor.BuildSymbolTableVisitor;
 import minijava.visitor.TypeCheckVis;
+import piglet.visitor.spigletvisitor;
 
 public class Main { 
 	public static String getInputMessage() throws IOException {
@@ -36,8 +39,15 @@ public class Main {
 		    if(p.error) System.out.println("This java file has error(s)");
 		    
 		    pigletVisitor pg = new pigletVisitor(newT,newST.temp,"");
-    	    minijavaroot.accept(pg,newT);
-    	    System.out.println(minijava.m2p.Put.pigletCode());
+    	    minijavaroot.accept(pg, newT);
+    	    //System.out.println(toPiglet.Put.pigletCode());
+    	    
+    	    int n = minijava.m2p.Temp.getNumber();
+		    new piglet.PigletParser(new ByteArrayInputStream(minijava.m2p.Put.pigletCode().getBytes()));
+			piglet.syntaxtree.Node pigletroot = PigletParser.Goal();
+			spigletvisitor spg = new spigletvisitor("", n);
+		    pigletroot.accept(spg, null);
+    	    System.out.println(piglet.p2s.Put.spigletCode());
 		}
     	catch(Exception e){
 	    	e.printStackTrace();
