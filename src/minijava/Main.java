@@ -6,7 +6,7 @@ import java.io.InputStream;
 
 import minijava.symboltable.SymTable;
 import minijava.syntaxtree.Node;
-import minijava.toPiglet.pigletVisitor;
+import minijava.visitor.pigletVisitor;
 import minijava.visitor.BuildSymbolTableVisitor;
 import minijava.visitor.TypeCheckVis;
 
@@ -37,7 +37,7 @@ public class Main {
 		    
 		    pigletVisitor pg = new pigletVisitor(newT,newST.temp,"");
     	    minijavaroot.accept(pg,newT);
-    	    System.out.println(toPiglet.Put.pigletCode());
+    	    System.out.println(minijava.m2p.Put.pigletCode());
 		}
     	catch(Exception e){
 	    	e.printStackTrace();
