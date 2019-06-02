@@ -12,10 +12,12 @@ import minijava.visitor.pigletVisitor;
 import minijava.visitor.BuildSymbolTableVisitor;
 import minijava.visitor.TypeCheckVis;
 import piglet.visitor.spigletvisitor;
+import spiglet.SpigletParser;
+import spiglet.s2k.KangaVisitor;
 
-public class Main { 
+public class Main {
 	public static String getInputMessage() throws IOException {
-        System.out.println("JavaÎÄ¼þµØÖ·£º");
+        System.out.println("Java file root: ");
         byte buffer[] = new byte[1024];
         int count = System.in.read(buffer);
         char[] ch = new char[count-2];
@@ -45,9 +47,13 @@ public class Main {
     	    int n = minijava.m2p.Temp.getNumber();
 		    new piglet.PigletParser(new ByteArrayInputStream(minijava.m2p.Put.pigletCode().getBytes()));
 			piglet.syntaxtree.Node pigletroot = PigletParser.Goal();
-			spigletvisitor spg = new spigletvisitor("", n);
-		    pigletroot.accept(spg, null);
-    	    System.out.println(piglet.p2s.Put.spigletCode());
+		    pigletroot.accept(new spigletvisitor("", n), null);
+    	    //System.out.println(piglet.p2s.Put.spigletCode());
+		    
+		    new spiglet.SpigletParser(new ByteArrayInputStream(piglet.p2s.Put.spigletCode().getBytes()));
+		    spiglet.syntaxtree.Node spigletroot = SpigletParser.Goal();
+		    spigletroot.accept(new KangaVisitor(),null);
+		    System.out.println(spiglet.s2k.Put.kangaCode());
 		}
     	catch(Exception e){
 	    	e.printStackTrace();

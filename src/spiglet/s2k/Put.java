@@ -1,24 +1,14 @@
 package spiglet.s2k;
+
 public class Put {
-	static String Tab = "";
+	static String tab = "";
 	static String filename;
 	static String output = "";
-	public static void con(String s){
-		output += Tab + s;
+
+	public static void gen(String s) {
+		output += tab + s;
 	}
-	public static void file(String s){
-		
-	}
-	public static String getoutput()
-	{
+	public static String kangaCode() {
 		return output;
-	}
-	public void addTab()
-	{
-		Tab += "    ";
-	}
-	public void minusTab()
-	{
-		Tab = Tab.substring(0,Tab.length()-4) ;
 	}
 }

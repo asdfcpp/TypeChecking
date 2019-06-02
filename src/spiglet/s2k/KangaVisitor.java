@@ -12,20 +12,13 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 	RegisterManager regMan = new RegisterManager();
 	int position=0;	
 	
-	 /**
-  	 * Grammar production:
-	 * f0 -> "MAIN"
-	 * f1 -> StmtList()
-	 * f2 -> "END"
-	 * f3 -> ( Procedure() )*
-	 * f4 -> <EOF>
-	 */	
+	
 	public void visit(Goal n,Generation_Info c)
 	{
 		Live_interval_visitor li = new Live_interval_visitor();
 		n.f1.accept(li);	//得到每一个temp的活性区间
 		
-		RegisterAllocator ra = new RegisterAllocator(0, li.liveInterval,li.max_args);
+		RegisterAllocator ra = new RegisterAllocator(0, li.interval_tree,li.max_args);
 		ra.RegisterAllocation();//分配寄存器
 		Generation_Info cc = new Generation_Info(ra.tables, ra.stackPos);
 		
@@ -67,7 +60,7 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 		Live_interval_visitor li = new Live_interval_visitor();
 		n.f4.accept(li);
 		
-		RegisterAllocator ra = new RegisterAllocator(Integer.parseInt(n.f2.f0.toString()), li.liveInterval, li.max_args);
+		RegisterAllocator ra = new RegisterAllocator(Integer.parseInt(n.f2.f0.toString()), li.interval_tree, li.max_args);
 		ra.RegisterAllocation();
 		FuncHeadGen(n.f0.f0.toString(), Integer.parseInt(n.f2.f0.toString()), ra.stackPos, ra.max_args,  ra.usedRegsArray, ra.usedRegNum);
 		regMan.clear();
@@ -80,13 +73,13 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 	public void visit(NoOpStmt n, Generation_Info c)
 	{
 		
-		Put.con(" NOOP\n");
+		Put.gen(" NOOP\n");
 	}
 
 	public void visit(ErrorStmt n, Generation_Info c)
 	{
 		
-		Put.con(" ERROR\n");
+		Put.gen(" ERROR\n");
 	}
 	/**
 	 * Grammar production:
@@ -97,9 +90,9 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 	public void visit(CJumpStmt n, Generation_Info c)
 	{
 		String t1 = ReadTemp(n.f1, c, 0);
-		Put.con(" CJUMP " + t1 + " ");
+		Put.gen(" CJUMP " + t1 + " ");
 		n.f2.accept(this, null);	
-		Put.con("\n");
+		Put.gen("\n");
 	}
 	/**
 	 * Grammar production:
@@ -108,9 +101,9 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 	 */	
 	public void visit(JumpStmt n, Generation_Info c)
 	{
-		Put.con(" JUMP ");
+		Put.gen(" JUMP ");
 		n.f1.accept(this, null);
-		Put.con("\n");
+		Put.gen("\n");
 	}
 	/**
 	 * Grammar production:
@@ -123,9 +116,9 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 	{
 		String s1 = ReadTemp(n.f1, c, 0);
 		String s2 = ReadTemp(n.f3, c, 1);
-		Put.con(" HSTORE " + s1 + " ");
+		Put.gen(" HSTORE " + s1 + " ");
 		n.f2.accept(this, null);
-		Put.con(" " + s2 + "\n");
+		Put.gen(" " + s2 + "\n");
 	}
 	/**
 	 * Grammar production:
@@ -139,9 +132,9 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 		Temp_location tempLoc1 = new Temp_location();
 		String s1 = WriteTemp(n.f1, c, 0, tempLoc1);
 		String s2 = ReadTemp(n.f2, c, 0);
-		Put.con(" HLOAD " + s1 + " " + s2 + " ");
+		Put.gen(" HLOAD " + s1 + " " + s2 + " ");
 		n.f3.accept(this, null);
-		Put.con("\n");
+		Put.gen("\n");
 		WriteMem_ifTempinMem(tempLoc1, s1);
 	}
 	/**
@@ -161,11 +154,11 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 		if(i == 0)
 		{
 			n.f2.accept(this, c);
-			Put.con("\n");
+			Put.gen("\n");
 			//position++;
 			Temp_location tempLoc = new Temp_location();
 			String s3 = WriteTemp(n.f1, c, 0,tempLoc);
-			Put.con(" MOVE " + s3 + " v0\n" );
+			Put.gen(" MOVE " + s3 + " v0\n" );
 			WriteMem_ifTempinMem(tempLoc, s3);
 			return;
 		}
@@ -178,7 +171,7 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 			//position++;
 			Temp_location tempLoc=new Temp_location();
 			s2 = WriteTemp(n.f1, c, 0, tempLoc);
-			Put.con(" MOVE " + s2 + " HALLOCATE " + s1 + "\n");
+			Put.gen(" MOVE " + s2 + " HALLOCATE " + s1 + "\n");
 			WriteMem_ifTempinMem(tempLoc, s2);
 			return;			
 		}
@@ -190,9 +183,9 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 			//position++;
 			Temp_location tempLoc = new Temp_location();
 			String s3 = WriteTemp(n.f1, c, 0, tempLoc);
-			Put.con(" MOVE " + s3 + " ");
+			Put.gen(" MOVE " + s3 + " ");
 			b.f0.accept(this, null);
-			Put.con(" " + s1 + " " + s2 + "\n");
+			Put.gen(" " + s1 + " " + s2 + "\n");
 			
 			WriteMem_ifTempinMem(tempLoc, s3);
 		}
@@ -203,7 +196,7 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 			//System.out.println("dafad------------------- " + n.f0.toString() + " " + "Temp " + n.f1.f1.f0.toString() + " "+ n.f2.toString());
 			Temp_location tempLoc = new Temp_location();
 			String s1 = WriteTemp(n.f1, c, 0, tempLoc);
-			Put.con(" MOVE " + s1 + " " + s2 + "\n");
+			Put.gen(" MOVE " + s1 + " " + s2 + "\n");
 			WriteMem_ifTempinMem(tempLoc, s1);
 		}
 		return;		
@@ -217,7 +210,7 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 	public void visit(PrintStmt n,Generation_Info c)
 	{
 		String s1 = SimpleExpCode(n.f1, c, 0);
-		Put.con(" PRINT " + s1 + "\n");
+		Put.gen(" PRINT " + s1 + "\n");
 	}
 	
 	/**
@@ -233,7 +226,7 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 		n.f1.accept(this, c);
 		position++;
 		String s1 = SimpleExpCode(n.f3, c, 0);
-		Put.con(" MOVE " + "v0 " + s1 + "\n");
+		Put.gen(" MOVE " + "v0 " + s1 + "\n");
 	}
 	
 	/**
@@ -253,40 +246,40 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 		{
 			Temp t = (Temp)Itr.next();
 			String s1 = ReadTemp(t, c, 0);
-			Put.con(" MOVE " + "a" + i + " " + s1 + "\n");
+			Put.gen(" MOVE " + "a" + i + " " + s1 + "\n");
 		}
 		int j=1;
 		for(;i<size;i++,j++)
 		{
 			Temp t = (Temp)Itr.next();
 			String s1 = ReadTemp(t, c, 0);
-			Put.con(" PASSARG " + j + " " + s1 +  "\n");
+			Put.gen(" PASSARG " + j + " " + s1 +  "\n");
 		}
 		String s1 = SimpleExpCode(n.f1, c, 0);
-		Put.con(" CALL " + s1 + "\n");
+		Put.gen(" CALL " + s1 + "\n");
 	}
 	
 	public void visit(Operator n, Generation_Info c)
 	{
 		switch(n.f0.which)
 		{
-		case 0: Put.con(" LT ");return;
-		case 1: Put.con(" PLUS ");return;
-		case 2: Put.con(" MINUS "); return;
-		case 3: Put.con(" TIMES "); return;
+		case 0: Put.gen(" LT ");return;
+		case 1: Put.gen(" PLUS ");return;
+		case 2: Put.gen(" MINUS "); return;
+		case 3: Put.gen(" TIMES "); return;
 		}
 	}
 	
 	public void visit(IntegerLiteral n, Generation_Info c)
 	{
 		String s = n.f0.toString();
-		Put.con(" " + s + " ");
+		Put.gen(" " + s + " ");
 	}
 	
 	public void visit(Label n, Generation_Info c)
 	{
 		String s = n.f0.toString();
-		Put.con(" " + s + " ");
+		Put.gen(" " + s + " ");
 	}
 	
 	public String WriteTemp(Temp n, Generation_Info c, int cond, Temp_location tempLoc)
@@ -308,7 +301,7 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 			if(c.Curr.spillToMem.containsKey(new Integer(oldTempnum)))
 			{
 				Temp_location LocInMem = c.Curr.spillToMem.get(oldTempnum);
-				Put.con(" ASTORE " + " SPILLEDARG " + LocInMem.stackLoc + " " + Regs.REGS[templ.loc] + "\n");
+				Put.gen(" ASTORE " + " SPILLEDARG " + LocInMem.stackLoc + " " + Regs.REGS[templ.loc] + "\n");
 				c.Curr.spillToMem.remove(oldTempnum);
 			}
 			regMan.assignReg(tempnum,templ.loc);//更新就职
@@ -334,7 +327,7 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 			if(c.Curr.spillToMem.containsKey(new Integer(oldTempnum)))
 			{
 				Temp_location LocInMem = c.Curr.spillToMem.get(oldTempnum);
-				Put.con(" ASTORE " + " SPILLEDARG " + LocInMem.stackLoc + " " + Regs.REGS[templ.loc] + "\n");
+				Put.gen(" ASTORE " + " SPILLEDARG " + LocInMem.stackLoc + " " + Regs.REGS[templ.loc] + "\n");
 				c.Curr.spillToMem.remove(oldTempnum);
 			}
 			regMan.assignReg(tempnum,templ.loc);//更新旧值
@@ -342,7 +335,7 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 		}
 		else
 		{
-			Put.con(" ALOAD " + Regs.REGS[cond+22] + " SPILLEDARG " + templ.stackLoc + "\n");
+			Put.gen(" ALOAD " + Regs.REGS[cond+22] + " SPILLEDARG " + templ.stackLoc + "\n");
 			return regMan.getRegName(cond+22);//v0只是个中转
 		}	
 	}
@@ -355,7 +348,7 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 		}
 		else
 		{
-			Put.con(" ASTORE " + " SPILLEDARG " + tempLoc.stackLoc + " " + reg + "\n");
+			Put.gen(" ASTORE " + " SPILLEDARG " + tempLoc.stackLoc + " " + reg + "\n");
 			return;
 		}
 	}
@@ -372,11 +365,11 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 	}	
 	public void FuncHeadGen(String funcName, int f1, int f2, int f3, int[] usedR, int usedRegNum)
 	{
-		Put.con(funcName + " [ " + f1 + " ] [ " + f2 + " ] [ " + f3 + " ]\n");
+		Put.gen(funcName + " [ " + f1 + " ] [ " + f2 + " ] [ " + f3 + " ]\n");
 		int j=0;
 		for(int i=f2-usedRegNum;i<f2;i++)
 		{
-			Put.con(" ASTORE " + " SPILLEDARG " + i + " " + Regs.REGS[usedR[j]] + "\n");
+			Put.gen(" ASTORE " + " SPILLEDARG " + i + " " + Regs.REGS[usedR[j]] + "\n");
 			j++;
 		}
 	}
@@ -386,10 +379,10 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 		int j=0;
 		for(int i=f2-savedRegNum;i<f2;i++)
 		{
-			Put.con(" ALOAD " + Regs.REGS[s[j]] + " SPILLEDARG " + i + "\n");
+			Put.gen(" ALOAD " + Regs.REGS[s[j]] + " SPILLEDARG " + i + "\n");
 			j++;
 		}
-		Put.con("END\n");
+		Put.gen("END\n");
 	}
 	
 	public void InitFormal(Generation_Info c,int f1)
@@ -402,12 +395,12 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 					Temp_location t = c.Curr.regTable.get(i);
 					if(t.isReg == true)
 					{
-						Put.con(" MOVE " + Regs.REGS[t.loc] + " " + Regs.REGS[i] + "\n");
+						Put.gen(" MOVE " + Regs.REGS[t.loc] + " " + Regs.REGS[i] + "\n");
 						regMan.assignReg(i, t.loc);
 					}
 					else
 					{
-						Put.con(" ASTORE " + " SPILLEDARG " + t.stackLoc + " " + Regs.REGS[i] + "\n");
+						Put.gen(" ASTORE " + " SPILLEDARG " + t.stackLoc + " " + Regs.REGS[i] + "\n");
 					}
 				}
 			}
