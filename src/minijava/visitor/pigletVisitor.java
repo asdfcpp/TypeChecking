@@ -725,7 +725,7 @@ public class pigletVisitor extends GJDepthFirst<String,Object> {
 		}
 		Mnumber += c.methods.size();
 		Tnumber += c.field.size();
-		Put.gen("MOVE " + t + " HALLOCATE " + Mnumber * 4 + "\n");//???????????
+		Put.gen("MOVE " + t + " HALLOCATE " + Mnumber * 4 + "\n");
 		   
 		int i = 0;
 		c = currClassTable;
