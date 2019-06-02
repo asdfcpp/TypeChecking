@@ -176,7 +176,7 @@ public class spigletvisitor extends GJDepthFirst<String,Object> {
 	 * f1 -> Exp()
 	 */
 	public String visit(PrintStmt n, Object argu) {
-		if(n.f1.f0.which > 3) { // need to check if it need > 1 lines
+		if(n.f1.f0.which < 4) { // need to check if it need > 1 lines
 			Tmp t = new Tmp();
 			Put.gen("MOVE " + t + " " + n.f1.accept(this, argu) + "\n");
 			Put.gen("PRINT " + t.toString() + "\n");
@@ -267,13 +267,14 @@ public class spigletvisitor extends GJDepthFirst<String,Object> {
 	 * f2 -> Exp() should be a simple-exp
 	 */
 	public String visit(BinOp n, Object argu) {
-		String s1 = n.f1.accept(this, argu), s2 = n.f2.accept(this, argu);
+		String s1 = n.f1.accept(this, argu);
 		if(n.f1.f0.which != 4) {
 			Tmp t = new Tmp();
 			Put.gen("MOVE " + t + " " + s1 + "\n");
 			s1 = t.toString();
 		}
-		if(n.f2.f0.which > 3) {
+		String s2 = n.f2.accept(this, argu);
+		if(n.f2.f0.which < 4) {
 			Tmp t = new Tmp();
 			Put.gen("MOVE " + t + " " + s2 + "\n");
 			s2 = t.toString();

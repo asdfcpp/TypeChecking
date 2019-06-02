@@ -42,13 +42,14 @@ public class Main {
 		    
 		    pigletVisitor pg = new pigletVisitor(newT,newST.temp,"");
     	    minijavaroot.accept(pg, newT);
-    	    //System.out.println(toPiglet.Put.pigletCode());
+    	    //System.out.println(minijava.m2p.Put.pigletCode());
     	    
     	    int n = minijava.m2p.Temp.getNumber();
 		    new piglet.PigletParser(new ByteArrayInputStream(minijava.m2p.Put.pigletCode().getBytes()));
 			piglet.syntaxtree.Node pigletroot = PigletParser.Goal();
 		    pigletroot.accept(new spigletvisitor("", n), null);
     	    //System.out.println(piglet.p2s.Put.spigletCode());
+    	    
 		    
 		    new spiglet.SpigletParser(new ByteArrayInputStream(piglet.p2s.Put.spigletCode().getBytes()));
 		    spiglet.syntaxtree.Node spigletroot = SpigletParser.Goal();
