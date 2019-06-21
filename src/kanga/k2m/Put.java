@@ -1,30 +1,25 @@
 package kanga.k2m;
+
 public class Put {
-	static String Tab = "";
+	static String tab = "";
 	static String filename;
 	static String output = "";
-	public static void con(String s){
-		System.out.printf(Tab + s);
 	
+	public static void gen(String s) {
+		output += tab + s;
 	}
-	public static void file(String s){
-		
+	public static void up() {
+		tab += "\t";
 	}
-	public static String getoutput()
-	{
+	public static void down() {
+		tab = tab.substring(0, Put.tab.length() - 1);
+	}
+	public static String mipsCode() {
 		return output;
-	}
-	public static void addTab()
-	{
-		Tab += "    ";
-	}
-	public static void minusTab()
-	{
-		Tab = Tab.substring(0,Tab.length()-4) ;
 	}
 	public static void called_function()
 	{
-		String temp = "         .text            \n" +
+		String temp = "\n         .text            \n" +
 		 "         .globl _hallocs  \n" +
 		 "_hallocs:                 \n" +
 		 "         li $v0, 9        \n" +
@@ -56,7 +51,7 @@ public class Put {
 		 "         syscall          \n" +
 		 "         li $v0, 10       \n" +
 		 "         syscall          \n";
-		System.out.printf(temp);
+		output += temp;
 	}
 }
 
