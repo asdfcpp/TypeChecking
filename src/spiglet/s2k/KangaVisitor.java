@@ -12,7 +12,14 @@ public class KangaVisitor extends GJVoidDepthFirst<Generation_Info>{
 	RegisterManager regMan = new RegisterManager();
 	int position=0;	
 	
-	
+	/**
+	 * Grammar production:
+	 * f0 -> "MAIN"
+	 * f1 -> StmtList()
+	 * f2 -> "END"
+	 * f3 -> ( Procedure() )*
+	 * f4 -> <EOF>
+	 */	
 	public void visit(Goal n,Generation_Info c)
 	{
 		Live_interval_visitor li = new Live_interval_visitor();
